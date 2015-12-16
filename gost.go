@@ -55,23 +55,23 @@ func (dot *project) make() {
 		<-make_notify
 		log.Println("-- stop")
 		dot.stop()
-		log.Println("-- make")
 
 		for i := len(make_notify); i > 0; i-- {
-			fmt.Println("======== ", len(make_notify))
+			// fmt.Println("======== ", len(make_notify))
 			<-make_notify
 		}
 
+		log.Println("-- make\n")
 		build := exec.Command("go", "build", "-o", "a.out")
 		build.Stdout = os.Stdout
 		build.Stderr = os.Stderr
 		err := build.Run()
 		if err != nil {
-			log.Printf("Command finished with error: %v \n", err)
+			fmt.Printf("\n\nCommand finished with error: %v \n\n", err)
 			continue
 		}
 
-		log.Println("-- start")
+		log.Println("-- start\n\n")
 		dot.start()
 	}
 }
@@ -80,21 +80,48 @@ func (dot *project) start() {
 	dot.cmd = exec.Command("./a.out")
 	dot.cmd.Stdout = os.Stdout
 	dot.cmd.Stderr = os.Stderr
-	go dot.cmd.Run()
+	dot.cmd.Start()
 }
 
 func (dot *project) stop() {
 	if dot.cmd != nil && dot.cmd.Process != nil {
-		if !dot.cmd.ProcessState.Exited() {
-			err := dot.cmd.Process.Kill()
-			if err != nil {
-				log.Println("Error cmd.Process.Kill() - ", err)
-			}
+		err := dot.cmd.Process.Kill()
+		if err != nil {
+			log.Println("Error cmd.Process.Kill() - ", err)
 		}
 	}
 
 	if rec := recover(); rec != nil {
 		log.Println("Recovered in - ", rec)
+	}
+}
+
+func (dot *project) watch() {
+	watcher, err := fsnotify.NewWatcher()
+
+	if err != nil {
+		log.Println("Fail fsnotify NewWatcher() - ", err)
+		os.Exit(2)
+	}
+
+	for _, dir := range dot.dirs {
+		err = watcher.Watch(dir)
+		if err != nil {
+			log.Println("Fail fsnotify Watch() - ", err)
+			os.Exit(2)
+		}
+	}
+
+	for {
+		select {
+		case ev := <-watcher.Event:
+			if filepath.Ext(ev.Name) == ".go" {
+				log.Println("-- watcher.Event: ", ev)
+				make_notify <- true
+			}
+		case err := <-watcher.Error:
+			log.Println("watcher.Error: ", err)
+		}
 	}
 }
 
@@ -107,8 +134,6 @@ func main() {
 		os.Exit(2)
 	}
 	pro.dirs = append(pro.dirs, wd)
-	// pro.dirs = append(pro.dirs, "../test")
-	// os.Chdir(path)
 
 	var last, cursor int
 	for {
@@ -120,34 +145,7 @@ func main() {
 		cursor = last
 	}
 
-	watcher, err := fsnotify.NewWatcher()
-	if err != nil {
-		log.Println("Fail fsnotify NewWatcher() - ", err)
-		os.Exit(2)
-	}
-
-	go func() {
-		for {
-			select {
-			case ev := <-watcher.Event:
-				if filepath.Ext(ev.Name) == ".go" && ev.IsModify() {
-					log.Println("-- watcher.Event: ", ev)
-					make_notify <- true
-				}
-			case err := <-watcher.Error:
-				log.Println("watcher.Error: ", err)
-			}
-		}
-	}()
-
-	for _, dir := range pro.dirs {
-		err = watcher.Watch(dir)
-		if err != nil {
-			log.Println("Fail fsnotify Watch() - ", err)
-			os.Exit(2)
-		}
-	}
-
+	go pro.event()
 	go pro.make()
 
 	quit := make(chan bool)
