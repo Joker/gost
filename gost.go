@@ -7,18 +7,18 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"time"
 
 	"github.com/howeyc/fsnotify"
 	// "github.com/k0kubun/pp"
 )
 
+var make_notify = make(chan bool, 100)
+
 type project struct {
-	dirs      []string
-	goFiles   []string
-	jadeFiles []string
-	makeLock  bool
-	cmd       *exec.Cmd
+	dirs []string
+	// goFiles   []string
+	// jadeFiles []string
+	cmd *exec.Cmd
 }
 
 func (dot *project) parseDir(sl int) {
@@ -33,14 +33,14 @@ func (dot *project) parseDir(sl int) {
 		for _, file := range fileInfo {
 			fname = file.Name()
 
-			if filepath.Ext(fname) == ".go" {
-				dot.goFiles = append(dot.goFiles, wd+"/"+fname)
-				continue
-			}
-			if filepath.Ext(fname) == ".jade" {
-				dot.jadeFiles = append(dot.jadeFiles, wd+"/"+fname)
-				continue
-			}
+			// if filepath.Ext(fname) == ".go" {
+			// 	dot.goFiles = append(dot.goFiles, wd+"/"+fname)
+			// 	continue
+			// }
+			// if filepath.Ext(fname) == ".jade" {
+			// 	dot.jadeFiles = append(dot.jadeFiles, wd+"/"+fname)
+			// 	continue
+			// }
 
 			if file.IsDir() == true && fname[0] != '.' {
 				dot.dirs = append(dot.dirs, wd+"/"+fname)
@@ -51,29 +51,45 @@ func (dot *project) parseDir(sl int) {
 }
 
 func (dot *project) make() {
-	mk := exec.Command("go", "build", "-o", "a.out")
-	mk.Stdout = os.Stdout
-	mk.Stderr = os.Stderr
-	err := mk.Run()
-	if err != nil {
-		log.Println("Fail run make() - ", err)
-		os.Exit(2)
+	for {
+		<-make_notify
+		log.Println("-- stop")
+		dot.stop()
+		log.Println("-- make")
+
+		for i := len(make_notify); i > 0; i-- {
+			fmt.Println("======== ", len(make_notify))
+			<-make_notify
+		}
+
+		build := exec.Command("go", "build", "-o", "a.out")
+		build.Stdout = os.Stdout
+		build.Stderr = os.Stderr
+		err := build.Run()
+		if err != nil {
+			log.Printf("Command finished with error: %v \n", err)
+			continue
+		}
+
+		log.Println("-- start")
+		dot.start()
 	}
 }
 
 func (dot *project) start() {
-	dot.cmd = exec.Command("a.out")
+	dot.cmd = exec.Command("./a.out")
 	dot.cmd.Stdout = os.Stdout
 	dot.cmd.Stderr = os.Stderr
-
 	go dot.cmd.Run()
 }
 
 func (dot *project) stop() {
 	if dot.cmd != nil && dot.cmd.Process != nil {
-		err := dot.cmd.Process.Kill()
-		if err != nil {
-			log.Println("Error cmd.Process.Kill() - ", err)
+		if !dot.cmd.ProcessState.Exited() {
+			err := dot.cmd.Process.Kill()
+			if err != nil {
+				log.Println("Error cmd.Process.Kill() - ", err)
+			}
 		}
 	}
 
@@ -111,23 +127,15 @@ func main() {
 	}
 
 	go func() {
-		var event string
 		for {
 			select {
 			case ev := <-watcher.Event:
-				if event == fmt.Sprint(time.Now().Unix(), ev) {
-					break
+				if filepath.Ext(ev.Name) == ".go" && ev.IsModify() {
+					log.Println("-- watcher.Event: ", ev)
+					make_notify <- true
 				}
-				event = fmt.Sprint(time.Now().Unix(), ev)
-				log.Println("-- make")
-				pro.make()
-				log.Println("-- stop")
-				pro.stop()
-				log.Println("-- start")
-				pro.start()
-
 			case err := <-watcher.Error:
-				log.Println("error:", err)
+				log.Println("watcher.Error: ", err)
 			}
 		}
 	}()
@@ -140,7 +148,7 @@ func main() {
 		}
 	}
 
-	// pro.make()
+	go pro.make()
 
 	quit := make(chan bool)
 	for {
