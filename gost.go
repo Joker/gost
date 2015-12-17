@@ -52,27 +52,29 @@ func (dot *project) parseDir(sl int) {
 
 func (dot *project) make() {
 	for {
-		<-make_notify
-		log.Println("-- stop")
-		dot.stop()
+		if <-make_notify {
+			log.Println("-- stop")
+			dot.stop()
 
-		for i := len(make_notify); i > 0; i-- {
-			// fmt.Println("======== ", len(make_notify))
-			<-make_notify
+			for i := len(make_notify); i > 0; i-- {
+				<-make_notify
+			}
+
+			log.Println("-- make\n")
+			build := exec.Command("go", "build", "-o", "a.out")
+			build.Stdout = os.Stdout
+			build.Stderr = os.Stderr
+			err := build.Run()
+			if err != nil {
+				fmt.Printf("\n\nBuild finished with error: %v \n\n", err)
+				continue
+			}
+
+			log.Println("-- start\n\n")
+			dot.start()
+		} else {
+			break
 		}
-
-		log.Println("-- make\n")
-		build := exec.Command("go", "build", "-o", "a.out")
-		build.Stdout = os.Stdout
-		build.Stderr = os.Stderr
-		err := build.Run()
-		if err != nil {
-			fmt.Printf("\n\nCommand finished with error: %v \n\n", err)
-			continue
-		}
-
-		log.Println("-- start\n\n")
-		dot.start()
 	}
 }
 
@@ -97,8 +99,8 @@ func (dot *project) stop() {
 }
 
 func (dot *project) watch() {
-	watcher, err := fsnotify.NewWatcher()
 
+	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		log.Println("Fail fsnotify NewWatcher() - ", err)
 		os.Exit(2)
@@ -125,34 +127,33 @@ func (dot *project) watch() {
 	}
 }
 
-func main() {
-	pro := project{}
+func initProject() project {
+	dot := project{}
 
 	wd, err := os.Getwd()
 	if err != nil {
 		log.Println("Fail Getwd() - ", err)
 		os.Exit(2)
 	}
-	pro.dirs = append(pro.dirs, wd)
+	dot.dirs = append(dot.dirs, wd)
 
 	var last, cursor int
 	for {
-		last = len(pro.dirs)
-		pro.parseDir(cursor)
+		last = len(dot.dirs)
+		dot.parseDir(cursor)
 		if last == cursor {
 			break
 		}
 		cursor = last
 	}
+	return dot
+}
 
-	go pro.event()
+func main() {
+	pro := initProject()
+
+	go pro.watch()
 	go pro.make()
 
-	quit := make(chan bool)
-	for {
-		select {
-		case <-quit:
-			return
-		}
-	}
+	pro.command()
 }
