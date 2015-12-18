@@ -3,7 +3,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 )
@@ -24,9 +23,7 @@ Bye:
 		switch string(b) {
 		case "r":
 			// TODO check ./a.out
-			log.Println("-- stop")
 			dot.stop()
-			log.Println("-- start\n\n")
 			dot.start()
 		case "b":
 			make_notify <- true
