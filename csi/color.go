@@ -8,6 +8,8 @@ package csi
 
 import (
 	"fmt"
+	"log"
+	"os"
 )
 
 const (
@@ -69,17 +71,19 @@ const (
 	White_lb   = "\033[107m"
 )
 
-func Info(str string) {
-	fmt.Printf(" %s[INFO]%s  %s\n", Green_h, Reset, str)
+var std = log.New(os.Stderr, "", log.LstdFlags)
+
+func Info(v ...interface{}) {
+	std.Output(2, fmt.Sprintf(" %s[INFO]%s  %s\n", Green_h, Reset, fmt.Sprint(v...)))
 }
-func Warn(str string) {
-	fmt.Printf(" %s[WARN]%s  %s\n", Yellow_h, Reset, str)
+func Warn(v ...interface{}) {
+	std.Output(2, fmt.Sprintf(" %s[WARN]%s  %s\n", Yellow_h, Reset, fmt.Sprint(v...)))
 }
-func Error(str string) {
-	fmt.Printf(" %s[ERRO]%s  %s\n", Red_h, Reset, str)
+func Error(v ...interface{}) {
+	std.Output(2, fmt.Sprintf(" %s[ERRO]%s  %s\n", Red_h, Reset, fmt.Sprint(v...)))
 }
-func Fatal(str string) {
-	fmt.Printf(" %s[FATA]%s  %s\n", Red, Reset, str)
+func Fatal(v ...interface{}) {
+	std.Output(2, fmt.Sprintf(" %s[FATA]%s  %s\n", Red, Reset, fmt.Sprint(v...)))
 }
 
 func N(n int) string {
@@ -119,6 +123,6 @@ func Cyan_f() {
 func White_f() {
 	fmt.Print("\033[37m")
 }
-func Reset_f() {
+func End() {
 	fmt.Print("\033[0m")
 }

@@ -41,6 +41,8 @@ Bye:
 			dot.stop()
 			fmt.Println("goodbye")
 			break Bye
+		default:
+			fmt.Println(b)
 		}
 	}
 }
