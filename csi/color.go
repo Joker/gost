@@ -85,6 +85,18 @@ func Error(v ...interface{}) {
 func Fatal(v ...interface{}) {
 	std.Output(2, fmt.Sprintf(" %s[FATA]%s  %s\n", Red, Reset, fmt.Sprint(v...)))
 }
+func Infof(format string, v ...interface{}) {
+	std.Output(2, fmt.Sprintf(" %s[INFO]%s  %s\n", Green_h, Reset, fmt.Sprintf(format, v...)))
+}
+func Warnf(format string, v ...interface{}) {
+	std.Output(2, fmt.Sprintf(" %s[WARN]%s  %s\n", Yellow_h, Reset, fmt.Sprintf(format, v...)))
+}
+func Errorf(format string, v ...interface{}) {
+	std.Output(2, fmt.Sprintf(" %s[ERRO]%s  %s\n", Red_h, Reset, fmt.Sprintf(format, v...)))
+}
+func Fatalf(format string, v ...interface{}) {
+	std.Output(2, fmt.Sprintf(" %s[FATA]%s  %s\n", Red, Reset, fmt.Sprintf(format, v...)))
+}
 
 func N(n int) string {
 	return fmt.Sprintf("\033[38;5;%dm", n)

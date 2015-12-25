@@ -24,10 +24,25 @@ func (dot *project) jade() {
 		c.Info(fileName)
 		tmpl, err := jade.Parse("jt", string(dat))
 		if err != nil {
+			fmt.Printf("Jade template error: %v", err)
+		}
+
+		fmt.Println(tmpl)
+	}
+}
+
+func (dot *project) rebuildAllJade() {
+	for _, fname := range dot.jadeFiles {
+		dat, err := ioutil.ReadFile(fname)
+		if err != nil {
 			fmt.Printf("ReadFile error: %v", err)
 			return
 		}
 
-		fmt.Println(tmpl)
+		tmpl, err := jade.Parse("jt", string(dat))
+		if err != nil {
+			c.Errorf("Jade template error: %v", err)
+		}
+		c.Info(fname, "\n\n", tmpl)
 	}
 }

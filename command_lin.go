@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+
+	c "github.com/Joker/csi"
 )
 
 func (dot *project) command() {
@@ -20,26 +22,29 @@ func (dot *project) command() {
 Bye:
 	for {
 		os.Stdin.Read(b)
-		switch string(b) {
-		case "r":
+
+		switch uint32(b[0]) {
+		case 114: // "r":
 			// TODO check ./a.out
 			dot.stop()
 			dot.start()
-		case "b":
+		case 98: // "b":
 			make_notify <- true
-		case " ":
+		case 106: // "j":
+			dot.rebuildAllJade()
+		case 32: // " ":
 			if pause {
 				go dot.make()
 				pause = false
-				fmt.Println("start make")
+				c.Info("start make")
 			} else {
 				make_notify <- false
 				pause = true
-				fmt.Println("stop  make")
+				c.Info("stop  make")
 			}
-		case "q":
+		case 113: //"q":
 			dot.stop()
-			fmt.Println("goodbye")
+			c.Info("goodbye")
 			break Bye
 		default:
 			fmt.Println(b)

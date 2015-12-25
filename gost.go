@@ -18,8 +18,8 @@ var jade_notify = make(chan string, 100)
 type project struct {
 	dirs []string
 	// goFiles   []string
-	// jadeFiles []string
-	cmd *exec.Cmd
+	jadeFiles []string
+	cmd       *exec.Cmd
 }
 
 func (dot *project) parseDir(sl int) {
@@ -38,10 +38,10 @@ func (dot *project) parseDir(sl int) {
 			// 	dot.goFiles = append(dot.goFiles, wd+"/"+fname)
 			// 	continue
 			// }
-			// if filepath.Ext(fname) == ".jade" {
-			// 	dot.jadeFiles = append(dot.jadeFiles, wd+"/"+fname)
-			// 	continue
-			// }
+			if filepath.Ext(fname) == ".jade" {
+				dot.jadeFiles = append(dot.jadeFiles, wd+"/"+fname)
+				continue
+			}
 
 			if file.IsDir() == true && fname[0] != '.' {
 				dot.dirs = append(dot.dirs, wd+"/"+fname)
