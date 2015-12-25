@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"time"
 
 	c "github.com/Joker/csi"
 )
@@ -14,7 +15,8 @@ func (dot *project) make() {
 		if <-make_notify {
 			dot.stop()
 
-			for i := len(make_notify); i > 0; i-- {
+			time.Sleep(time.Second * 1)
+			for len(make_notify) > 0 {
 				<-make_notify
 			}
 

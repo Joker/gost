@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
-	// "log"
+	"time"
 	// "os"
 	// "os/exec"
 
@@ -15,6 +15,11 @@ func (dot *project) jade() {
 	var fileName string
 	for {
 		fileName = <-jade_notify
+
+		time.Sleep(500 * time.Millisecond)
+		for len(jade_notify) > 0 {
+			<-jade_notify
+		}
 		dat, err := ioutil.ReadFile(fileName)
 		if err != nil {
 			fmt.Printf("ReadFile error: %v", err)
