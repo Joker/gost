@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
@@ -16,39 +15,9 @@ var make_notify = make(chan bool, 100)
 var jade_notify = make(chan string, 100)
 
 type project struct {
-	dirs []string
-	// goFiles   []string
+	dirs      []string
 	jadeFiles []string
 	cmd       *exec.Cmd
-}
-
-func (dot *project) parseDir(sl int) {
-	for _, wd := range dot.dirs[sl:] {
-		fileInfo, err := ioutil.ReadDir(wd)
-		if err != nil {
-			log.Println("Fail ReadDir() - ", err)
-			os.Exit(2)
-		}
-
-		var fname string
-		for _, file := range fileInfo {
-			fname = file.Name()
-
-			// if filepath.Ext(fname) == ".go" {
-			// 	dot.goFiles = append(dot.goFiles, wd+"/"+fname)
-			// 	continue
-			// }
-			if filepath.Ext(fname) == ".jade" {
-				dot.jadeFiles = append(dot.jadeFiles, wd+"/"+fname)
-				continue
-			}
-
-			if file.IsDir() == true && fname[0] != '.' {
-				dot.dirs = append(dot.dirs, wd+"/"+fname)
-				continue
-			}
-		}
-	}
 }
 
 func (dot *project) watch() {
@@ -92,17 +61,19 @@ func initProject() project {
 		log.Println("Fail Getwd() - ", err)
 		os.Exit(2)
 	}
-	dot.dirs = append(dot.dirs, wd)
 
-	var last, cursor int
-	for {
-		last = len(dot.dirs)
-		dot.parseDir(cursor)
-		if last == cursor {
-			break
+	filepath.Walk(wd, func(path string, file os.FileInfo, err error) error {
+		if filepath.Ext(file.Name()) == ".jade" {
+			dot.jadeFiles = append(dot.jadeFiles, path)
 		}
-		cursor = last
-	}
+		if file.IsDir() == true {
+			dot.dirs = append(dot.dirs, path)
+		}
+		return nil
+	})
+
+	// pp.Println(dot)
+
 	return dot
 }
 
@@ -113,6 +84,6 @@ func main() {
 	go pro.make()
 	go pro.jade()
 
-	fmt.Println(".")
+	fmt.Println("...")
 	pro.command()
 }
