@@ -1,12 +1,12 @@
 package main
 
 import (
-	"fmt"
 	"io/ioutil"
 	"time"
 
 	c "github.com/Joker/ioterm"
 	"github.com/Joker/jade"
+	"strings"
 )
 
 func (dot *project) jade() {
@@ -18,34 +18,32 @@ func (dot *project) jade() {
 		for len(jade_notify) > 0 {
 			<-jade_notify
 		}
-		dat, err := ioutil.ReadFile(fileName)
-		if err != nil {
-			fmt.Printf("ReadFile error: %v", err)
-			return
-		}
 
-		c.Info(fileName)
-		tmpl, err := jade.Parse("jt", string(dat))
-		if err != nil {
-			fmt.Printf("Jade template error: %v", err)
-		}
-
-		fmt.Println(tmpl)
+		parse(fileName)
 	}
 }
 
 func (dot *project) rebuildAllJade() {
 	for _, fname := range dot.jadeFiles {
-		dat, err := ioutil.ReadFile(fname)
-		if err != nil {
-			fmt.Printf("ReadFile error: %v", err)
-			return
-		}
+		parse(fname)
+	}
+}
 
-		tmpl, err := jade.Parse("jt", string(dat))
-		if err != nil {
-			c.Errorf("Jade template error: %v", err)
-		}
-		c.Info(fname, "\n\n", tmpl)
+func parse(fileName string) {
+	dat, err := ioutil.ReadFile(fileName)
+	if err != nil {
+		c.Errorf("ReadFile: %v", err)
+		return
+	}
+
+	c.Info("parse: ", fileName)
+	tmpl, err := jade.Parse("jt", string(dat))
+	if err != nil {
+		c.Errorf("Jade template: %v", err)
+	}
+
+	err = ioutil.WriteFile(strings.Replace(fileName, ".jade", ".tpl", 1), []byte(tmpl), 0644)
+	if err != nil {
+		c.Errorf("WriteFile: %v", err)
 	}
 }
