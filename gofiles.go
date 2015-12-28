@@ -7,7 +7,7 @@ import (
 	"os/exec"
 	"time"
 
-	c "github.com/Joker/csi"
+	c "github.com/Joker/ioterm"
 )
 
 func (dot *project) make() {
@@ -48,9 +48,8 @@ func (dot *project) start() {
 }
 
 func (dot *project) stop() {
-	fmt.Println(c.Red_h, "--  stop --", c.Reset)
-
 	if dot.cmd != nil && dot.cmd.Process != nil {
+		fmt.Println(c.Red_h, "--  stop --", c.Reset)
 		err := dot.cmd.Process.Kill()
 		if err != nil {
 			log.Println("Error cmd.Process.Kill() - ", err)

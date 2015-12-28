@@ -4,10 +4,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"time"
-	// "os"
-	// "os/exec"
 
-	c "github.com/Joker/csi"
+	c "github.com/Joker/ioterm"
 	"github.com/Joker/jade"
 )
 

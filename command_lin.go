@@ -1,22 +1,21 @@
 // +build linux
+
 package main
 
 import (
 	"fmt"
 	"os"
-	"os/exec"
 
-	c "github.com/Joker/csi"
+	c "github.com/Joker/ioterm"
 )
 
 func (dot *project) command() {
-	// disable input buffering
-	exec.Command("stty", "-F", "/dev/tty", "cbreak", "min", "1").Run()
-	// do not display entered characters on the screen
-	exec.Command("stty", "-F", "/dev/tty", "-echo").Run()
+
+	c.RawMode()
+	defer c.OrigMode()
 
 	var (
-		b     []byte = make([]byte, 1)
+		b     = make([]byte, 1)
 		pause bool
 	)
 Bye:
@@ -25,9 +24,12 @@ Bye:
 
 		switch uint32(b[0]) {
 		case 114: // "r":
-			// TODO check ./a.out
-			dot.stop()
-			dot.start()
+			if _, err := os.Stat("./" + dot.name); err == nil {
+				dot.stop()
+				dot.start()
+			} else {
+				c.Infof("file '%s' does not exist", dot.name)
+			}
 		case 98: // "b":
 			make_notify <- true
 		case 106: // "j":
