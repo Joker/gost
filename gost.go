@@ -15,6 +15,7 @@ var make_notify = make(chan bool, 100)
 var jade_notify = make(chan string, 100)
 
 type project struct {
+	name      string
 	dirs      []string
 	jadeFiles []string
 	cmd       *exec.Cmd
@@ -61,6 +62,8 @@ func initProject() project {
 		log.Println("Fail Getwd() - ", err)
 		os.Exit(2)
 	}
+
+	dot.name = filepath.Base(wd)
 
 	filepath.Walk(wd, func(path string, file os.FileInfo, err error) error {
 		if filepath.Ext(file.Name()) == ".jade" {

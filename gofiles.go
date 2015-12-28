@@ -22,7 +22,7 @@ func (dot *project) make() {
 
 			fmt.Println(c.Blue_h, "--  make --", c.Reset)
 
-			build := exec.Command("go", "build", "-o", "a.out")
+			build := exec.Command("go", "build", "-o", dot.name)
 			build.Stdout = os.Stdout
 			build.Stderr = os.Stderr
 			err := build.Run()
@@ -41,7 +41,7 @@ func (dot *project) make() {
 func (dot *project) start() {
 	fmt.Println(c.Green_h, "-- start --", c.Reset, c.N(22), "\n", c.Reset)
 
-	dot.cmd = exec.Command("./a.out")
+	dot.cmd = exec.Command("./" + dot.name)
 	dot.cmd.Stdout = os.Stdout
 	dot.cmd.Stderr = os.Stderr
 	dot.cmd.Start()
