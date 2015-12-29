@@ -46,4 +46,5 @@ func parse(fileName string) {
 	if err != nil {
 		c.Errorf("WriteFile: %v", err)
 	}
+	c.Note("\n\n", tmpl)
 }

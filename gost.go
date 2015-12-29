@@ -87,6 +87,6 @@ func main() {
 	go pro.make()
 	go pro.jade()
 
-	fmt.Println("...")
+	fmt.Println(">>>")
 	pro.command()
 }

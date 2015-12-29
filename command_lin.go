@@ -23,18 +23,20 @@ Bye:
 		os.Stdin.Read(b)
 
 		switch uint32(b[0]) {
-		case 114: // "r":
+		case 104: // "h"
+			commandHelp()
+		case 114: // "r"
 			if _, err := os.Stat("./" + dot.name); err == nil {
 				dot.stop()
 				dot.start()
 			} else {
 				c.Infof("file '%s' does not exist", dot.name)
 			}
-		case 98: // "b":
+		case 98: // "b"
 			make_notify <- true
-		case 106: // "j":
+		case 106: // "j"
 			dot.rebuildAllJade()
-		case 32: // " ":
+		case 32: // " "
 			if pause {
 				go dot.make()
 				pause = false
@@ -44,7 +46,11 @@ Bye:
 				pause = true
 				c.Info("stop  make")
 			}
-		case 113: //"q":
+		case 10: // "enter"			ScrollUp 7 lines
+			c.Esc("7S")
+		case 127: // "backspace" 	Clean screen
+			c.Esc("2J")
+		case 113: // "q"
 			dot.stop()
 			c.Info("goodbye")
 			break Bye
@@ -52,4 +58,17 @@ Bye:
 			fmt.Println(b)
 		}
 	}
+}
+
+func commandHelp() {
+	fmt.Println(`
+	q - quit
+	h - print help
+	j - compile all .jade files
+	r - restart go program
+	b - rebuild go program
+	space - stop/start build go program
+	enter - ScrollUp 7 lines
+	backspace - Clean screen
+	`)
 }
