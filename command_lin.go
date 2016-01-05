@@ -28,7 +28,7 @@ Bye:
 		case 114: // "r"
 			if _, err := os.Stat("./" + dot.name); err == nil {
 				dot.stop()
-				dot.start()
+				go dot.start()
 			} else {
 				c.Infof("file '%s' does not exist", dot.name)
 			}
