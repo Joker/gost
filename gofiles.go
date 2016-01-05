@@ -11,6 +11,7 @@ import (
 
 	c "github.com/Joker/ioterm"
 	// "github.com/k0kubun/pp"
+	"github.com/Joker/panicparse/internal"
 )
 
 type panicWriter struct {
@@ -73,6 +74,8 @@ func (dot *project) start() {
 	if err != nil {
 		if !err.(*exec.ExitError).Success() {
 			fmt.Println(c.Blue_l, sebuf, c.Reset)
+			zxc, _ := internal.ParsePanic(sebuf)
+			fmt.Println(string(zxc))
 			c.Errorf("%s pid:%d -- %v", dot.name, err.(*exec.ExitError).Pid(), err)
 		}
 	}
