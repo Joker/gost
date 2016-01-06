@@ -14,10 +14,8 @@ func (dot *project) command() {
 	c.RawMode()
 	defer c.OrigMode()
 
-	var (
-		b     = make([]byte, 1)
-		pause bool
-	)
+	b := make([]byte, 1)
+
 Bye:
 	for {
 		os.Stdin.Read(b)
@@ -37,15 +35,21 @@ Bye:
 		case 106: // "j"
 			dot.rebuildAllJade()
 		case 32: // " "
-			if pause {
-				go dot.make()
-				pause = false
-				c.Info("start make")
+			conf.goFilesPause = !conf.goFilesPause
+			if conf.goFilesPause {
+				c.Info("start build go program")
 			} else {
-				make_notify <- false
-				pause = true
-				c.Info("stop  make")
+				c.Note("stop  build go program")
 			}
+		case 105: // "i"
+			conf.jadeFilesPause = !conf.jadeFilesPause
+			if conf.jadeFilesPause {
+				c.Info("start compile .jade")
+			} else {
+				c.Note("stop  compile .jade")
+			}
+		case 112: // "p"
+			conf.realPanic = !conf.realPanic
 		case 10: // "enter"			ScrollUp 7 lines
 			c.Esc("7S")
 		case 127: // "backspace" 	Clean screen
@@ -65,6 +69,8 @@ func commandHelp() {
 	q - quit
 	h - print help
 	j - compile all .jade files
+	i - stop/start compile .jade files
+	p - show/hide real panic message
 	r - restart go program
 	b - rebuild go program
 	space - stop/start build go program

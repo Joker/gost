@@ -40,11 +40,12 @@ func (dot *project) watch() {
 	for {
 		select {
 		case ev := <-watcher.Event:
-			if filepath.Ext(ev.Name) == ".go" {
+			ext := filepath.Ext(ev.Name)
+			switch {
+			case ext == ".go" && conf.goFilesPause:
 				log.Println("-- watcher.Event: ", ev)
 				make_notify <- true
-			}
-			if filepath.Ext(ev.Name) == ".jade" {
+			case ext == ".jade" && conf.jadeFilesPause:
 				log.Println("-- watcher.Event: ", ev)
 				jade_notify <- ev.Name
 			}

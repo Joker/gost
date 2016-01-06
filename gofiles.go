@@ -10,9 +10,11 @@ import (
 	"time"
 
 	c "github.com/Joker/ioterm"
-	// "github.com/k0kubun/pp"
 	"github.com/Joker/panicparse/internal"
+	// "github.com/k0kubun/pp"
 )
+
+var realPanic = false
 
 type panicWriter struct {
 	w io.Writer
@@ -25,29 +27,26 @@ func (pw panicWriter) Write(p []byte) (int, error) {
 
 func (dot *project) make() {
 	for {
-		if <-make_notify {
-			dot.stop()
+		<-make_notify
+		dot.stop()
 
-			time.Sleep(time.Second * 1)
-			for len(make_notify) > 0 {
-				<-make_notify
-			}
-
-			fmt.Println(c.Blue_h, "--  make --", c.Reset)
-
-			build := exec.Command("go", "build", "-o", dot.name)
-			build.Stdout = os.Stdout
-			build.Stderr = os.Stderr
-			err := build.Run()
-			if err != nil {
-				fmt.Printf("\n\n%s\n%s\nBuild finished with error: %v \n\n", c.Blue_b, c.Reset, err)
-				continue
-			}
-
-			go dot.start()
-		} else {
-			break
+		time.Sleep(time.Second * 1)
+		for len(make_notify) > 0 {
+			<-make_notify
 		}
+
+		fmt.Println(c.Blue_h, "--  make --", c.Reset)
+
+		build := exec.Command("go", "build", "-o", dot.name)
+		build.Stdout = os.Stdout
+		build.Stderr = os.Stderr
+		err := build.Run()
+		if err != nil {
+			fmt.Printf("\n\n%s\n%s\nBuild finished with error: %v \n\n", c.Blue_b, c.Reset, err)
+			continue
+		}
+
+		go dot.start()
 	}
 }
 
@@ -72,21 +71,23 @@ func (dot *project) start() {
 
 	err = dot.cmd.Wait()
 	if err != nil {
-		if !err.(*exec.ExitError).Success() {
-			fmt.Println(c.Blue_l, sebuf, c.Reset)
-			zxc, _ := internal.ParsePanic(sebuf)
-			fmt.Println(string(zxc))
-			c.Errorf("%s pid:%d -- %v", dot.name, err.(*exec.ExitError).Pid(), err)
+		if sebuf.Len() > 0 {
+			if conf.realPanic {
+				fmt.Println(c.Red, sebuf, c.Reset)
+			}
+			pp, _ := internal.ParsePanic(sebuf)
+			fmt.Println(string(pp))
 		}
+		c.Errorf("%s pid:%d -- %v", dot.name, err.(*exec.ExitError).Pid(), err)
 	}
 }
 
 func (dot *project) stop() {
-	if dot.cmd != nil && dot.cmd.Process != nil && !dot.cmd.ProcessState.Exited() {
+	if dot.cmd != nil && dot.cmd.Process != nil {
 		fmt.Println(c.Red_h, "--  stop --", c.Reset)
 		err := dot.cmd.Process.Kill()
 		if err != nil {
-			log.Println("Error cmd.Process.Kill() - ", err)
+			c.Note("cmd.Process.Kill() - ", err)
 		}
 	}
 
