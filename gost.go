@@ -48,6 +48,9 @@ func (dot *project) watch() {
 			case ext == ".jade" && conf.jadeFilesPause:
 				log.Println("-- watcher.Event: ", ev)
 				jade_notify <- ev.Name
+			case ext == ".sass" && conf.sassFilesPause:
+			case ext == ".sql" && conf.sqlFilesPause:
+			case ext == ".js" && conf.jsFilesPause:
 			}
 		case err := <-watcher.Error:
 			log.Println("watcher.Error: ", err)

@@ -14,7 +14,7 @@ func (dot *project) command() {
 	c.RawMode()
 	defer c.OrigMode()
 
-	b := make([]byte, 1)
+	b := make([]byte, 3)
 
 Bye:
 	for {
@@ -61,6 +61,7 @@ Bye:
 		default:
 			fmt.Println(b)
 		}
+		b = []byte{0, 0, 0}
 	}
 }
 
@@ -69,11 +70,11 @@ func commandHelp() {
 	q - quit
 	h - print help
 	j - compile all .jade files
-	i - stop/start compile .jade files
+	i - stop/start compile tpl when .jade files modify
 	p - show/hide real panic message
 	r - restart go program
 	b - rebuild go program
-	space - stop/start build go program
+	space - stop/start build go program when .go files modify
 	enter - ScrollUp 7 lines
 	backspace - Clean screen
 	`)
