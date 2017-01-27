@@ -9,8 +9,9 @@ import (
 	"os/exec"
 	"time"
 
-	c "github.com/Joker/ioterm"
-	"github.com/Joker/panicparse/internal"
+	l "github.com/Joker/ioterm"
+	c "github.com/Joker/ioterm/color"
+	"github.com/Joker/panicparse/inter"
 	// "github.com/k0kubun/pp"
 )
 
@@ -51,7 +52,7 @@ func (dot *project) make() {
 }
 
 func (dot *project) start() {
-	fmt.Println(c.Green_h, "-- start --", c.Reset, c.N(22), "\n", c.Reset)
+	fmt.Println(c.Green_h, "-- start --", c.Reset, l.N(22), "\n", c.Reset)
 
 	dot.cmd = exec.Command("./" + dot.name)
 	dot.cmd.Stdout = os.Stdout
@@ -78,7 +79,7 @@ func (dot *project) start() {
 			pp, _ := internal.ParsePanic(sebuf)
 			fmt.Println(string(pp))
 		}
-		c.Errorf("%s pid:%d -- %v", dot.name, err.(*exec.ExitError).Pid(), err)
+		l.Errorf("%s pid:%d -- %v", dot.name, err.(*exec.ExitError).Pid(), err)
 	}
 }
 
@@ -87,7 +88,7 @@ func (dot *project) stop() {
 		fmt.Println(c.Red_h, "--  stop --", c.Reset)
 		err := dot.cmd.Process.Kill()
 		if err != nil {
-			c.Note("cmd.Process.Kill() - ", err)
+			l.Note("cmd.Process.Kill() - ", err)
 		}
 	}
 
